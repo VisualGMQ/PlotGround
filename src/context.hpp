@@ -46,12 +46,5 @@ private:
     void handleEvent();
     void initApp();
 
-    template <typename Level>
-    void registerLevel2Scene(const std::string& sceneName) {
-        auto scene = sceneMgr->Find(sceneName);
-        TL_RETURN_IF_FALSE(scene);
-        scene->RegisterLevel(std::make_unique<Level>(*scene));
-    }
-
     static Context* inst;
 };

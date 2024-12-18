@@ -63,8 +63,8 @@ void PlotApp::initStyle() {
     colors[ImPlotCol_MarkerOutline] = IMPLOT_AUTO_COL;
     colors[ImPlotCol_MarkerFill]    = IMPLOT_AUTO_COL;
     colors[ImPlotCol_ErrorBar]      = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-    colors[ImPlotCol_FrameBg]       = ImVec4(0.96f, 0.96f, 0.92f, 1.00f);
-    colors[ImPlotCol_PlotBg]        = ImVec4(0.8f, 0.8f, 0.8f, 1.00f);
+    colors[ImPlotCol_FrameBg]       = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
+    colors[ImPlotCol_PlotBg]        = ImVec4(1.0f, 1.0f, 1.0f, 1.00f);
     colors[ImPlotCol_PlotBorder]    = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
     colors[ImPlotCol_LegendBg]      = ImVec4(0.92f, 0.92f, 0.95f, 1.00f);
     colors[ImPlotCol_LegendBorder]  = ImVec4(0.80f, 0.81f, 0.85f, 1.00f);
@@ -72,7 +72,7 @@ void PlotApp::initStyle() {
     colors[ImPlotCol_TitleText]     = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
     colors[ImPlotCol_InlayText]     = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
     colors[ImPlotCol_AxisText]      = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-    colors[ImPlotCol_AxisGrid]      = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+    colors[ImPlotCol_AxisGrid]      = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
     colors[ImPlotCol_AxisBgHovered]   = ImVec4(0.92f, 0.92f, 0.95f, 1.00f);
     colors[ImPlotCol_AxisBgActive]    = ImVec4(0.92f, 0.92f, 0.95f, 0.75f);
     colors[ImPlotCol_Selection]     = ImVec4(1.00f, 0.65f, 0.00f, 1.00f);
@@ -127,7 +127,7 @@ void PlotApp::plotOnePolyline(const char* title, const std::vector<float>& data)
     
     if (ImPlot::BeginPlot(title)) {
         ImPlot::SetupAxisLimits(ImAxis_X1,0, 100, ImGuiCond_Always);
-        ImPlot::SetupAxisLimits(ImAxis_Y1,-50,50);
+        ImPlot::SetupAxisLimits(ImAxis_Y1, -100, 100);
         ImPlot::PlotLine<float>("data", &data[(int)begin_], end_ - begin_, 1,
                                 0, ImPlotFlags_None, 0,
                                 sizeof(float));
