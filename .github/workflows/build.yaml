@@ -20,9 +20,6 @@ jobs:
             - name: MacOS
               os: macOS-latest
               android: none
-            - name: Android
-              os: ubuntu-latest
-              android: arm64
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -57,41 +54,15 @@ jobs:
         ${{ matrix.cmake-path }}cmake --preset=CI-Linux
 
     - name: Config cmake(Emscripten)
-      working-directory: ./game
       if: matrix.name == 'Emscripten'
       run: |
         emcmake cmake --preset=CI-Emscripten
 
     - name: Config cmake(Windows)
-      working-directory: ./game
       if: contains(matrix.os, 'windows')
       run: |
         ${{ matrix.cmake-path}}cmake --preset=CI-Windows
 
     - name: Build under PC
-      working-directory: ./game
       if: matrix.android == 'none'
       run: ${{ matrix.cmake-path }}cmake --build cmake-build
-
-    - name: Prepare Android JDK
-      if: runner.os == 'Linux' && matrix.android != 'none'
-      uses: actions/setup-java@v4
-      with:
-        java-version: '11'
-        distribution: 'adopt'
-
-    - name: Prepare Android Project
-      if: runner.os == 'Linux' && matrix.android != 'none'
-      run: |
-        git submodule update --init --recursive
-        sudo apt update -y
-        sudo apt install cmake ninja-build -y
-        cp -r ./game ./android/app/jni/
-        chmod +x ./android/gradlew
-
-    - name: Build under Android
-      if: runner.os == 'Linux' && matrix.android != 'none'
-      working-directory: ./android
-      run: |
-        ninja --version
-        ./gradlew build
