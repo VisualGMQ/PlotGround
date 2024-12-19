@@ -5,7 +5,7 @@
 
 #ifdef __EMSCRIPTEN__
 void MainLoop() {
-    tl::Context::GetInst().Update();
+    Context::GetInst().Update();
 }
 #endif
 

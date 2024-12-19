@@ -2,6 +2,7 @@
 
 #include "app.hpp"
 #include "args.hpp"
+#include "font.hpp"
 #include "input/keyboard.hpp"
 #include "input/mouse.hpp"
 #include "pch.hpp"
@@ -21,6 +22,7 @@ public:
 
     std::unique_ptr<Window> window;
     std::unique_ptr<Renderer> renderer;
+    std::unique_ptr<FontManager> fontMgr;
     std::unique_ptr<Keyboard> keyboard;
     std::unique_ptr<Mouse> mouse;
     std::unique_ptr<Time> time;

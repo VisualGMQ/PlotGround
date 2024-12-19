@@ -29,6 +29,7 @@ void Context::postInit(int argc, char** argv) {
     keyboard = std::make_unique<Keyboard>();
     mouse = std::make_unique<Mouse>();
     time = std::make_unique<Time>();
+    fontMgr = std::make_unique<FontManager>();
     args = std::make_unique<Args>();
 
     for (int i = 1; i < argc; i++) {
@@ -74,6 +75,7 @@ Context::~Context() {
     mouse.reset();
     keyboard.reset();
     renderer.reset();
+    fontMgr.reset();
     window.reset();
 
     quitSDL();

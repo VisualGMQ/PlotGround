@@ -45,10 +45,13 @@ void PlotApp::OnUpdate(float deltaTime) {
     plotOnePolyline("x-samples", xData_);
     plotOnePolyline("y-samples", yData_);
     plotOnePolyline("z-samples", zData_);
-    
+
     quitStyle();
 
     ImPlot::ShowDemoWindow();
+
+    Context::GetInst().renderer->DrawLineWithWidth(
+        Vec2{100, 100}, Vec2{200, 200}, Color::Red, 5);
 }
 
 void PlotApp::initStyle() {
