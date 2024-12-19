@@ -51,6 +51,8 @@ void Context::initSDL() {
     }
     TTF_Init();
 
+    SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "1" );
+
 #ifdef TL_ANDROID
     SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
 #endif

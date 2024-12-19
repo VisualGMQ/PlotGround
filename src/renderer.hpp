@@ -26,6 +26,8 @@ public:
     void DrawText(const std::string& text, const Vec2& position,
                   const Font& font, const Color&);
     void DrawLineWithWidth(const Vec2& p1, const Vec2& p2, const Color&, float width);
+    void FillCircle(const Circle& circle, const Color& color, int seg = 100);
+    void FillTriangle(const Vec2& p1, const Vec2& p2, const Vec2& p3, const Color& color);
 
     operator bool() const;
 
