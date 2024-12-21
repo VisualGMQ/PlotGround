@@ -22,9 +22,16 @@ void PlotApp::OnInit() {
         return;
     }
 
+    int i = 0;
     while (!file.eof()) {
+        LOGI("processing line %d", i++);
         char discard;
         float value;
+
+        if (file.fail()) {
+            LOGE("read failed");
+            return;
+        }
 
         file >> value;
         file >> discard;
@@ -38,22 +45,34 @@ void PlotApp::OnInit() {
         zData_.push_back(value);
         file >> discard;
         file >> value;
+
+        sumData_.push_back(xData_.back() + yData_.back() + zData_.back());
     }
 }
 
 void PlotApp::OnUpdate(float deltaTime) {
-    initStyle();
     increaseRange(deltaTime);
 
-    plotOnePolyline("x-samples", xData_);
-    plotOnePolyline("y-samples", yData_);
-    plotOnePolyline("z-samples", zData_);
+    initStyle();
+
+    if (ImGui::Begin("lines")) {
+        setLineColor(ImColor{0, 0, 0});
+        plotOnePolyline("B", sumData_);
+
+        setLineColor(ImColor{255, 0, 0});
+        plotOnePolyline("Bx", xData_);
+
+        setLineColor(ImColor{0, 255, 0});
+        plotOnePolyline("By", yData_);
+
+        setLineColor(ImColor{0, 0, 255});
+        plotOnePolyline("Bz", zData_);
+        ImGui::End();
+    }
 
     quitStyle();
 
-    ImPlot::ShowDemoWindow();
-
-    static float i = 0;
+    // ImPlot::ShowDemoWindow();
 
     float xAngle = 0;
     float zAngle = 0;
@@ -90,8 +109,8 @@ void PlotApp::OnUpdate(float deltaTime) {
             }
             
         }
-        drawClock("X平面角度", Vec2{800, 300}, 180, xAngle);
-        drawClock("Z平面角度", Vec2{800, 800}, 180, zAngle);
+        drawClock(("Φ=" + std::to_string(Rad2Deg(xAngle))).c_str(), Vec2{800, 300}, 180, xAngle);
+        drawClock(("θ=" + std::to_string(Rad2Deg(zAngle))).c_str(), Vec2{800, 800}, 180, zAngle);
     }
 }
 
@@ -102,7 +121,7 @@ void PlotApp::initStyle() {
     ImPlotStyle& style              = ImPlot::GetStyle();
 
     ImVec4* colors                  = style.Colors;
-    colors[ImPlotCol_Line]          = ImVec4(1, 0, 0, 1);
+    colors[ImPlotCol_Line]          = IMPLOT_AUTO_COL;
     colors[ImPlotCol_Fill]          = IMPLOT_AUTO_COL;
     colors[ImPlotCol_MarkerOutline] = IMPLOT_AUTO_COL;
     colors[ImPlotCol_MarkerFill]    = IMPLOT_AUTO_COL;
@@ -173,13 +192,14 @@ void PlotApp::plotOnePolyline(const char* title,
     if (ImPlot::BeginPlot(title)) {
         ImPlot::SetupAxisLimits(ImAxis_X1, 0, 100, ImGuiCond_Always);
         ImPlot::SetupAxisLimits(ImAxis_Y1, -100, 100);
-        ImPlot::PlotLine<float>("data", &data[(int)begin_], end_ - begin_, 1, 0,
+        ImPlot::PlotLine<float>("##data", &data[(int)begin_], end_ - begin_, 1, 0,
                                 ImPlotFlags_None, 0, sizeof(float));
         ImPlot::EndPlot();
     }
 }
 
-void PlotApp::drawClock(const char* title, const Vec2& pos, float radius, float radians) {
+void PlotApp::drawClock(const char* title, const Vec2& pos, float radius,
+                        float radians) {
     font_->SetPtSize(40);
     auto& renderer = Context::GetInst().renderer;
     renderer->DrawText(title, pos - Vec2{0, radius + 40}, *font_, Color::White);
@@ -197,7 +217,8 @@ void PlotApp::drawClock(const char* title, const Vec2& pos, float radius, float 
     float innerRadius = radius - 30;
     for (int i = 0; i < lineCount; i++) {
         float angle = i * angleStep;
-        Vec2 inner = pos + Vec2{cos(angle) * innerRadius, sin(angle) * innerRadius};
+        Vec2 inner =
+            pos + Vec2{cos(angle) * innerRadius, sin(angle) * innerRadius};
         Vec2 outer = pos + Vec2{cos(angle) * outRadius, sin(angle) * outRadius};
         renderer->DrawLine(inner, outer, Color::Black);
 
@@ -209,8 +230,9 @@ void PlotApp::drawClock(const char* title, const Vec2& pos, float radius, float 
                                     sin(angle) * (outRadius - offset)};
 
             constexpr float textOffset = 30;
-            Vec2 textInner = pos + Vec2{cos(angle) * (innerRadius - textOffset),
-                                                sin(angle) * (innerRadius - textOffset)};
+            Vec2 textInner =
+                pos + Vec2{cos(angle) * (innerRadius - textOffset),
+                           sin(angle) * (innerRadius - textOffset)};
             renderer->DrawLineWithWidth(inner, outer, Color::Black, 3);
             int angle = 30 * i / boldLinePadding + 90;
             angle = angle > 360 ? angle - 360 : angle;
@@ -226,4 +248,8 @@ void PlotApp::drawClock(const char* title, const Vec2& pos, float radius, float 
             renderer->FillTriangle(triP1, triP2, triP3, Color::Black);
         }
     }
+}
+
+void PlotApp::setLineColor(const ImColor& color){
+    ImPlot::SetNextLineStyle(color);
 }

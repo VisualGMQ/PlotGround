@@ -18,7 +18,7 @@ void Context::Destroy() {
 void Context::postInit(int argc, char** argv) {
     initSDL();
 
-    window = std::make_unique<Window>("Treasure Looter", 1024, 1024);
+    window = std::make_unique<Window>("PlotGround", 1024, 1300);
     renderer = std::make_unique<Renderer>(*window);
     if (!window || !renderer) {
         quitSDL();

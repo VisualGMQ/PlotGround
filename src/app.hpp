@@ -19,6 +19,7 @@ private:
     std::vector<float> xData_;
     std::vector<float> yData_;
     std::vector<float> zData_;
+    std::vector<float> sumData_;
     Font* font_;
     float speed_ = 10.0f;
     size_t count_ = 100;
@@ -30,4 +31,5 @@ private:
     void increaseRange(float deltaTime);
     void plotOnePolyline(const char* title, const std::vector<float>& data);
     void drawClock(const char* title, const Vec2& pos, float radius, float degrees);
+    void setLineColor(const ImColor& color);
 };
