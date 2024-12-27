@@ -21,6 +21,7 @@ private:
     std::vector<float> zData_;
     std::vector<float> sumData_;
     Font* font_;
+    ImFont* imFont_;
     float speed_ = 10.0f;
     size_t count_ = 100;
     float begin_  = 0;
@@ -30,6 +31,11 @@ private:
     void quitStyle();
     void increaseRange(float deltaTime);
     void plotOnePolyline(const char* title, const std::vector<float>& data);
-    void drawClock(const char* title, const Vec2& pos, float radius, float degrees);
+    void drawClock(const char* angleTitle, const char* title, const Vec2& pos, float radius,
+                   float degrees, bool clockwise, float offsetRadians,
+                   bool useNegativeAngle,
+                   const char* vertAxisTitle,
+                   const char* horzAxisTitle);
     void setLineColor(const ImColor& color);
+    void drawBLength(float length, const char* title, const Vec2& pos);
 };

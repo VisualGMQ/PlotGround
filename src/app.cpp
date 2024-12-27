@@ -7,8 +7,11 @@
 #include <fstream>
 
 void PlotApp::OnInit() {
-    font_ = Context::GetInst().fontMgr->Load("assets/simhei.ttf", "simhei");
+    font_ = Context::GetInst().fontMgr->Load("assets/arial.ttf", "arial");
     font_->SetPtSize(20);
+
+    imFont_ = ImGui::GetIO().Fonts->AddFontFromFileTTF("assets/arial.ttf", 15, nullptr, nullptr);
+    ImGui::GetIO().FontDefault = imFont_;
     
     auto& args = Context::GetInst().args->args;
     if (args.empty()) {
@@ -46,7 +49,9 @@ void PlotApp::OnInit() {
         file >> discard;
         file >> value;
 
-        sumData_.push_back(xData_.back() + yData_.back() + zData_.back());
+        sumData_.push_back(std::sqrt(xData_.back() * xData_.back() +
+                                     yData_.back() * yData_.back() +
+                                     zData_.back() * zData_.back()));
     }
 }
 
@@ -76,42 +81,37 @@ void PlotApp::OnUpdate(float deltaTime) {
 
     float xAngle = 0;
     float zAngle = 0;
-    {
-        if (end_ >= 0 && end_ < xData_.size()) {
-            float x = xData_[end_];
-            float y = yData_[end_];
-            float z = zData_[end_];
+    float len = 0; 
+    if (end_ >= 0 && end_ < xData_.size()) {
+        float x = xData_[end_];
+        float y = yData_[end_];
+        float z = zData_[end_];
 
-            // Vec2 p{1, 0};
-            // p = Rotate(p, i * 0.1);
-            // i++;
-            // float x = p.x;
-            // float y = p.y;
-            // float z = 1;
-            float len = std::sqrt(x * x + y * y + z * z);
+        len = std::sqrt(x * x + y * y + z * z);
 
-            if (len != 0) {
-                x /= len;
-                y /= len;
-                z /= len;
-            }
-
-            bool xNegative = y < 0;
-            bool zNegative = y < 0;
-
-            xAngle = std::acos(x);
-            if (xNegative) {
-                xAngle = 2.0 * PI - xAngle;
-            }
-            zAngle = std::acos(z);
-            if (zNegative) {
-                zAngle = 2.0 * PI - zAngle;
-            }
-            
+        if (len != 0) {
+            x /= len;
+            y /= len;
+            z /= len;
         }
-        drawClock(("Φ=" + std::to_string(Rad2Deg(xAngle))).c_str(), Vec2{800, 300}, 180, xAngle);
-        drawClock(("θ=" + std::to_string(Rad2Deg(zAngle))).c_str(), Vec2{800, 800}, 180, zAngle);
+
+        bool xNegative = y < 0;
+        bool zNegative = y < 0;
+
+        xAngle = std::acos(x);
+        if (xNegative) {
+            xAngle = 2.0 * PI - xAngle;
+        }
+        zAngle = std::acos(z);
+        if (zNegative) {
+            zAngle = 2.0 * PI - zAngle;
+        }
     }
+    drawClock("Φ=", "XY  Plane", Vec2{700, 400}, 250, xAngle, false, 0, false,
+              "Y", "X");
+    drawClock("θ=", "XZ  Plane", Vec2{700, 1000}, 250, zAngle, true, -PI * 0.5,
+              true, "Z", "X");
+    drawBLength(len, "|B|=", Vec2{1200, 400});
 }
 
 void PlotApp::initStyle() {
@@ -198,12 +198,15 @@ void PlotApp::plotOnePolyline(const char* title,
     }
 }
 
-void PlotApp::drawClock(const char* title, const Vec2& pos, float radius,
-                        float radians) {
-    font_->SetPtSize(40);
+void PlotApp::drawClock(const char* angleTitle, const char* title, const Vec2& pos, float radius,
+                        float radians, bool clockwise, float offsetRadians,
+                        bool useNegativeAngle, const char* vertAxisTitle,
+                        const char* horzAxisTitle) {
     auto& renderer = Context::GetInst().renderer;
-    renderer->DrawText(title, pos - Vec2{0, radius + 40}, *font_, Color::White);
-
+    font_->SetPtSize(40);
+    renderer->DrawText((angleTitle + std::to_string(Rad2Deg(radians))).c_str(),
+                       pos - Vec2{0, radius + 40}, *font_, Color::White);
+    
     font_->SetPtSize(20);
     renderer->FillCircle({pos, radius}, Color{0.77, 0.77, 0.77}, 50);
     renderer->FillCircle({pos, radius - 4}, Color{0.93, 0.93, 0.93}, 50);
@@ -222,7 +225,7 @@ void PlotApp::drawClock(const char* title, const Vec2& pos, float radius,
         Vec2 outer = pos + Vec2{cos(angle) * outRadius, sin(angle) * outRadius};
         renderer->DrawLine(inner, outer, Color::Black);
 
-        if (i % boldLinePadding == 0) {
+        if (i % boldLinePadding == 0 && i != lineCount - 1) {
             constexpr float offset = 10;
             Vec2 inner = pos + Vec2{cos(angle) * (innerRadius - offset),
                                     sin(angle) * (innerRadius - offset)};
@@ -231,25 +234,53 @@ void PlotApp::drawClock(const char* title, const Vec2& pos, float radius,
 
             constexpr float textOffset = 30;
             Vec2 textInner =
-                pos + Vec2{cos(angle) * (innerRadius - textOffset),
-                           sin(angle) * (innerRadius - textOffset)};
+                pos + Vec2{cos((clockwise ? 1 : -1) * (angle + offsetRadians)) * (innerRadius - textOffset),
+                           sin((clockwise ? 1 : -1) * (angle + offsetRadians)) * (innerRadius - textOffset)};
             renderer->DrawLineWithWidth(inner, outer, Color::Black, 3);
-            int angle = 30 * i / boldLinePadding + 90;
+            int angle = 30 * i / boldLinePadding;
+            int presentAngle = useNegativeAngle ? (angle > 180 ? angle - 360 : angle) : angle;
             angle = angle > 360 ? angle - 360 : angle;
-            renderer->DrawText(std::to_string(angle).c_str(), textInner, *font_,
+            renderer->DrawText((std::to_string(presentAngle) + "°").c_str(), textInner, *font_,
                                Color::Black);
 
-            Vec2 triP1 = Vec2{-10, (radius - 100)};
-            Vec2 triP2 = Vec2{10, (radius - 100)};
-            Vec2 triP3 = Vec2{0, -(radius - 50)};
-            triP1 = pos + Rotate(triP1, Rad2Deg(radians));
-            triP2 = pos + Rotate(triP2, Rad2Deg(radians));
-            triP3 = pos + Rotate(triP3, Rad2Deg(radians));
+            Vec2 triP1 = Vec2{-radius * 0.2f, -10};
+            Vec2 triP2 = Vec2{-radius * 0.2f, 10};
+            Vec2 triP3 = Vec2{radius * 0.6f, 0};
+            triP1 = pos + Rotate(triP1, (clockwise ? 1: -1) * Rad2Deg(radians + offsetRadians));
+            triP2 = pos + Rotate(triP2, (clockwise ? 1: -1) * Rad2Deg(radians + offsetRadians));
+            triP3 = pos + Rotate(triP3, (clockwise ? 1: -1) * Rad2Deg(radians + offsetRadians));
             renderer->FillTriangle(triP1, triP2, triP3, Color::Black);
         }
     }
+
+    float halfLineLen = radius * 0.6f;
+    Vec2 horiStart = pos - Vec2{halfLineLen, 0};
+    Vec2 horiEnd = pos + Vec2{halfLineLen, 0};
+    Vec2 vertStart = pos - Vec2{0, halfLineLen};
+    Vec2 vertEnd = pos + Vec2{0, halfLineLen};
+    renderer->DrawLineWithWidth(vertStart, vertEnd, Color::Black, 1.2);
+    renderer->DrawLineWithWidth(horiStart, horiEnd, Color::Black, 1.2);
+    renderer->FillTriangle(horiEnd - Vec2{0, 10}, horiEnd + Vec2{0, 10}, horiEnd + Vec2{15, 0}, Color::Black);
+    renderer->FillTriangle(vertStart - Vec2{10, 0}, vertStart + Vec2{10, 0}, vertStart - Vec2{0, 15}, Color::Black);
+
+    font_->SetPtSize(30);
+    renderer->DrawText(vertAxisTitle, vertStart + Vec2{20, 0}, *font_, Color::Black);
+    renderer->DrawText(horzAxisTitle, horiEnd + Vec2{0, 20}, *font_, Color::Black);
+    renderer->DrawText(title, pos + Vec2{20, radius * 0.4f}, *font_, Color::Black);
 }
 
-void PlotApp::setLineColor(const ImColor& color){
+void PlotApp::setLineColor(const ImColor& color) {
     ImPlot::SetNextLineStyle(color);
+}
+
+void PlotApp::drawBLength(float length, const char* title, const Vec2& pos) {
+    auto& renderer = Context::GetInst().renderer;
+    Rect rect;
+    rect.size = Vec2{300, 150};
+    rect.position = pos - rect.size * 0.5;
+    renderer->FillRect(rect, Color::Black);
+    rect.position += Vec2{5, 5};
+    rect.size -= Vec2{5, 5} * 2;
+    renderer->FillRect(rect, Color::White);
+    renderer->DrawText((title + std::to_string(length)).c_str(), pos, *font_, Color::Black);
 }
