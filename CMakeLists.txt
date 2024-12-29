@@ -17,60 +17,26 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 file(GLOB_RECURSE GAME_HEADERS src/*.hpp src/*.h)
 
-if (ANDROID)
-    add_library(main SHARED)
-    find_library(SDL2 SDL2)
-    find_library(SDL2_image SDL2_image)
-    find_library(SDL2_ttf SDL2_ttf)
-    find_library(SDL2_mixer SDL2_mixer)
-
-    target_compile_features(main PRIVATE cxx_std_17)
-    target_link_libraries(main PRIVATE SDL2)
-    target_link_libraries(main PRIVATE SDL2_image)
-    target_link_libraries(main PRIVATE SDL2_ttf)
-    target_link_libraries(main PRIVATE SDL2_mixer)
-    target_compile_definitions(main PRIVATE TL_ANDROID)
-elseif(EMSCRIPTEN)
-    message("emscripten build")
-    add_executable(main)
-    target_compile_definitions(main PRIVATE TL_EMSCRIPTEN)
-    set(USE_FLAGS "-sUSE_SDL=2 -sUSE_FREETYPE=1 -sUSE_SDL_IMAGE=2 -sUSE_SDL_TTF=2 -sUSE_SDL_MIXER=2 -sSDL2_IMAGE_FORMATS=\"[\"png\"]\"")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${USE_FLAGS}")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${USE_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${USE_FLAGS}")
-    set(CMAKE_EXECUTABLE_SUFFIX .html)
-    set_target_properties(main
-        PROPERTIES
-            LINK_FLAGS "--preload-file=assets -s ALLOW_MEMORY_GROWTH=1")
-
-    add_custom_command(TARGET main
-        PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets ${CMAKE_BINARY_DIR}/assets
-        COMMENT "copy assets file to build path"
-        VERBATIM
-    )
-else()
     find_package(SDL2 REQUIRED CONFIG)
     find_package(SDL2_image REQUIRED CONFIG)
     find_package(SDL2_ttf REQUIRED CONFIG)
     find_package(SDL2_mixer REQUIRED CONFIG)
 
-    add_executable(main)
-    target_link_libraries(main
+    add_executable(plot)
+    target_link_libraries(plot
         PRIVATE
         $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
         $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
     )
-    target_link_libraries(main PRIVATE $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>)
-    target_link_libraries(main PRIVATE $<IF:$<TARGET_EXISTS:SDL2_mixer::SDL2_mixer>,SDL2_mixer::SDL2_mixer,SDL2_mixer::SDL2_mixer-static>)
-    target_link_libraries(main PRIVATE $<IF:$<TARGET_EXISTS:SDL2_ttf::SDL2_ttf>,SDL2_ttf::SDL2_ttf,SDL2_ttf::SDL2_ttf-static>)
-endif()
+    target_link_libraries(plot PRIVATE $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>)
+    target_link_libraries(plot PRIVATE $<IF:$<TARGET_EXISTS:SDL2_mixer::SDL2_mixer>,SDL2_mixer::SDL2_mixer,SDL2_mixer::SDL2_mixer-static>)
+    target_link_libraries(plot PRIVATE $<IF:$<TARGET_EXISTS:SDL2_ttf::SDL2_ttf>,SDL2_ttf::SDL2_ttf,SDL2_ttf::SDL2_ttf-static>)
 
 
-target_sources(main PRIVATE ${GAME_SRC} ${GAME_HEADERS})
-target_sources(main PRIVATE ${GAME_ASSETS})
+target_sources(plot PRIVATE ${GAME_SRC} ${GAME_HEADERS})
+target_sources(plot PRIVATE ${GAME_ASSETS})
 
-target_compile_features(main PRIVATE cxx_std_17)
-target_include_directories(main PRIVATE src)
-target_compile_definitions(main PRIVATE _CRT_SECURE_NO_WARNINGS)
-target_precompile_headers(main PRIVATE src/pch.hpp)
+target_compile_features(plot PRIVATE cxx_std_17)
+target_include_directories(plot PRIVATE src)
+target_compile_definitions(plot PRIVATE _CRT_SECURE_NO_WARNINGS)
+target_precompile_headers(plot PRIVATE src/pch.hpp)

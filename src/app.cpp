@@ -21,7 +21,7 @@ void PlotApp::OnInit() {
     
     std::ifstream file(args[0]);
     if (file.fail()) {
-        LOGE("data.csv can't open");
+        LOGE("%s can't open", args[0].c_str());
         return;
     }
 
@@ -89,6 +89,10 @@ void PlotApp::OnUpdate(float deltaTime) {
 
         len = std::sqrt(x * x + y * y + z * z);
 
+        if (len < 50) {
+            LOGI("here");
+        }
+
         if (len != 0) {
             x /= len;
             y /= len;
@@ -107,11 +111,20 @@ void PlotApp::OnUpdate(float deltaTime) {
             zAngle = 2.0 * PI - zAngle;
         }
     }
+
     drawClock("Φ=", "XY  Plane", Vec2{700, 400}, 250, xAngle, false, 0, false,
               "Y", "X");
     drawClock("θ=", "XZ  Plane", Vec2{700, 1000}, 250, zAngle, true, -PI * 0.5,
               true, "Z", "X");
     drawBLength(len, "|B|=", Vec2{1200, 400});
+
+    if (ImGui::Begin("config")) {
+        ImGui::DragFloat("speed", &speed_, 1, 0.001, std::numeric_limits<float>::max());
+        ImGui::BeginDisabled(true);
+        ImGui::DragFloat("curret data index", &end_, 1, 0, 0, "%.3f");
+        ImGui::EndDisabled();
+        ImGui::End();
+    }
 }
 
 void PlotApp::initStyle() {
